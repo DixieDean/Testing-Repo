@@ -199,7 +199,9 @@ class TVGuide(xbmcgui.WindowXML):
         self.streamingService = streaming.StreamsService()
         self.player = xbmc.Player()
         self.database = None
-        self.categoriesList = ADDON.getSetting('categories').split('|')
+        if ADDON.getSetting('source') == 'DIXIE':
+            self.categoriesList = ADDON.getSetting('categories').split('|')
+        else: self.categoriesList = None
 
         self.mode = MODE_EPG
         self.currentChannel = None
@@ -555,7 +557,8 @@ class TVGuide(xbmcgui.WindowXML):
             d.doModal()
             self.categoriesList = d.currentCategories
             del d
-            ADDON.setSetting('categories', '|'.join(self.categoriesList))
+            if ADDON.getSetting('source') == 'DIXIE':
+                ADDON.setSetting('categories', '|'.join(self.categoriesList))
             self.onRedrawEPG(self.channelIdx, self.viewStartDate)
 
         elif buttonClicked == PopupMenu.C_POPUP_QUIT:
@@ -759,6 +762,8 @@ class TVGuide(xbmcgui.WindowXML):
             self.onEPGLoadError()
             return
 
+        channelsWithoutPrograms = list(channels)
+
         # date and time row
         self.setControlLabel(self.C_MAIN_DATE, self.formatDate(self.viewStartDate))
         for col in range(1, 5):
@@ -784,6 +789,8 @@ class TVGuide(xbmcgui.WindowXML):
 
         for program in programs:
             idx = channels.index(program.channel)
+            if program.channel in channelsWithoutPrograms:
+                channelsWithoutPrograms.remove(program.channel)
 
             startDelta = program.startDate - self.viewStartDate
             stopDelta = program.endDate - self.viewStartDate
@@ -819,6 +826,21 @@ class TVGuide(xbmcgui.WindowXML):
                 )
 
                 self.controlAndProgramList.append(ControlAndProgram(control, program))
+
+        for channel in channelsWithoutPrograms:
+            idx = channels.index(channel)
+
+            control = xbmcgui.ControlButton(
+                self.epgView.left,
+                self.epgView.top + self.epgView.cellHeight * idx,
+                (self.epgView.right - self.epgView.left) - 2,
+                self.epgView.cellHeight - 2,
+                strings(NO_PROGRAM_AVAILABLE),
+                noFocusTexture='tvguide-program-grey.png',
+                focusTexture='tvguide-program-grey-focus.png'
+            )
+
+            self.controlAndProgramList.append(ControlAndProgram(control, None))
 
         # add program controls
         if focusFunction is None:
@@ -1340,7 +1362,7 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
     VISIBLE_MASHUP= 'mashup'
 
     def __new__(cls, database, channel):
-        if os.path.exists(mashfile):
+        if MASHMODE:
             xml_file = os.path.join('script-tvguide-streamsetupmash.xml')
         else:
             xml_file = os.path.join('script-tvguide-streamsetup.xml')
@@ -1642,7 +1664,7 @@ class CategoriesMenu(xbmcgui.WindowXMLDialog):
             self.currentCategories = list(categoriesList)
         else:
             self.currentCategories = list()
-        
+
         self.workingCategories = list(self.currentCategories)
 
         self.swapInProgress = False
