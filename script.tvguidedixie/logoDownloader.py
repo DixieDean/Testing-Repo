@@ -1,4 +1,4 @@
-import urllib,dxm,xbmc,xbmcaddon
+import urllib,dxmnew,xbmc,xbmcaddon
 ADDON     = xbmcaddon.Addon(id = 'script.tvguidedixie')
 xbmc.executebuiltin("XBMC.Notification(TV Guide Dixie,Please Wait!,2000)")
 
@@ -14,7 +14,7 @@ except:xbmc.executebuiltin("XBMC.Notification(TV Guide Dixie,Logo download faile
 if os.path.isfile(LocalFile):
     extractFolder = Path
     pluginsrc =  xbmc.translatePath(os.path.join(extractFolder))
-    dxm.unzipAndMove(LocalFile,extractFolder,pluginsrc)
+    dxmnew.unzipAndMove(LocalFile,extractFolder,pluginsrc)
     xbmc.executebuiltin("XBMC.Notification(TV Guide Dixie,Logo download complete,3000)")
 try:os.remove(LocalFile)
 except:pass

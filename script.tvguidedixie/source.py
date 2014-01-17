@@ -486,7 +486,7 @@ class Database(object):
 
 
     def _getChannelList(self, onlyVisible, categories = None):
-        if categories:
+        if categories and len(categories) > 0:
             return self._getChannelListFilteredByCategory(onlyVisible, categories)
         c = self.conn.cursor()
         channelList = list()
@@ -1095,18 +1095,16 @@ def parseCATEGORIES(self, f, context):
         f = open(path)
         xml = f.read()
         f.close()
-            
+
     for event, elem in context:
-    	if event == "end":
-    		result = None
-            	if elem.get == "channel":
-                	categories = elem.findtext("category")
-                    
-                	result = Channel(categories)
-            
-        	return self.categories
-    	else:
-        	return None
+        if event == "end":
+            result = None
+            if elem.get == "channel":
+                categories = elem.findtext("category")
+                result = Channel(categories)
+            return self.categories
+        else:
+            return None
 
 
 

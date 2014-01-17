@@ -1,7 +1,8 @@
 import zipfile
 import shutil,os
 
-def unzipAndMove(_in, _out , src):
+
+def unzipAndMove(_in, _out, src):
     try:
         zin = zipfile.ZipFile(unicode(_in), 'r')
         zin.extractall(unicode(_out))
@@ -13,6 +14,7 @@ def unzipAndMove(_in, _out , src):
         return False
 
     return True
+
 
 def moveFiles(root_src_dir,root_dst_dir):
     for src_dir, dirs, files in os.walk(root_src_dir):

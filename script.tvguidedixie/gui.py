@@ -47,7 +47,7 @@ MASHMODE  = (ADDON.getSetting('mashmode') == 'true')
 SKIN      = ADDON.getSetting('dixie.skin')
 mash_path = os.path.join(xbmc.translatePath('special://home/userdata/addon_data') , 'script.tvguidedixie', 'extras', 'skins', 'Mash Up')
 skin_path = os.path.join(xbmc.translatePath('special://home/userdata/addon_data') , 'script.tvguidedixie', 'extras', 'skins', SKIN)
-mashfile = os.path.join(xbmc.translatePath('special://home/userdata/addon_data') , 'plugin.video.movie25', 'Dixie', 'mashup.ini')
+mashfile = os.path.join(xbmc.translatePath('special://userdata/addon_data'), 'plugin.video.movie25', 'Dixie', 'mashup.ini')
 
 if MASHMODE:
     PATH  = mash_path
@@ -55,12 +55,12 @@ else:
     PATH  = skin_path
 
 if not os.path.exists(skin_path):
-    import urllib,dxm
+    import urllib,dxmnew
     datapath = xbmc.translatePath(ADDON.getAddonInfo('profile'))
     Path=os.path.join(datapath,'extras')
     try: os.makedirs(Path)
     except: pass
-    Url = 'https://raw.github.com/DixieDean/Dixie-Deans-XBMC-Repo/master/skins.zip'
+    Url = 'https://github.com/DixieDean/Dixie-Deans-XBMC-Repo/raw/master/skins.zip'
     LocalName = 'skin.zip'
     LocalFile = xbmc.translatePath(os.path.join(Path, LocalName))
     try: urllib.urlretrieve(Url,LocalFile)
@@ -68,7 +68,7 @@ if not os.path.exists(skin_path):
     if os.path.isfile(LocalFile):
         extractFolder = Path
         pluginsrc =  xbmc.translatePath(os.path.join(extractFolder))
-        dxm.unzipAndMove(LocalFile,extractFolder,pluginsrc)
+        dxmnew.unzipAndMove(LocalFile,extractFolder,pluginsrc)
     try:os.remove(LocalFile)
     except:pass
 
@@ -199,10 +199,9 @@ class TVGuide(xbmcgui.WindowXML):
         self.streamingService = streaming.StreamsService()
         self.player = xbmc.Player()
         self.database = None
-        if ADDON.getSetting('source') == 'DIXIE':
-            self.categoriesList = ADDON.getSetting('categories').split('|')
-        else: self.categoriesList = None
-
+        self.categoriesList = ADDON.getSetting('categories').split('|')
+        if self.categoriesList[0] == '':
+           self.categoriesList = []
         self.mode = MODE_EPG
         self.currentChannel = None
 
@@ -557,8 +556,7 @@ class TVGuide(xbmcgui.WindowXML):
             d.doModal()
             self.categoriesList = d.currentCategories
             del d
-            if ADDON.getSetting('source') == 'DIXIE':
-                ADDON.setSetting('categories', '|'.join(self.categoriesList))
+            ADDON.setSetting('categories', '|'.join(self.categoriesList))
             self.onRedrawEPG(self.channelIdx, self.viewStartDate)
 
         elif buttonClicked == PopupMenu.C_POPUP_QUIT:
@@ -840,7 +838,10 @@ class TVGuide(xbmcgui.WindowXML):
                 focusTexture='tvguide-program-grey-focus.png'
             )
 
-            self.controlAndProgramList.append(ControlAndProgram(control, None))
+            now  = datetime.datetime.today()
+            then = now + datetime.timedelta(minutes = 24*60)
+            program = src.Program(channel, strings(NO_PROGRAM_AVAILABLE), now, then, "", "")
+            self.controlAndProgramList.append(ControlAndProgram(control, program))
 
         # add program controls
         if focusFunction is None:
@@ -1145,9 +1146,9 @@ class PopupMenu(xbmcgui.WindowXMLDialog):
             self.setFocusId(self.C_POPUP_CHOOSE_STREAM)
         # SJP - if in touch screen mode always enable Play button and
         # set focus to it
-        if self.touch:
+        if self.touch or self.program.title == strings(NO_PROGRAM_AVAILABLE):
             playControl.setEnabled(True)
-            self.setFocusId(self.C_POPUP_PLAY)
+            self.setFocusId(self.C_POPUP_PLAY)        
         if self.database.getCustomStreamUrl(self.program.channel):
             chooseStrmControl = self.getControl(self.C_POPUP_CHOOSE_STREAM)
             chooseStrmControl.setLabel(strings(REMOVE_STRM_FILE))
@@ -1362,11 +1363,8 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
     VISIBLE_MASHUP= 'mashup'
 
     def __new__(cls, database, channel):
-        if MASHMODE:
-            xml_file = os.path.join('script-tvguide-streamsetupmash.xml')
-        else:
-            xml_file = os.path.join('script-tvguide-streamsetup.xml')
-
+        xml_file = os.path.join('script-tvguide-streamsetup.xml')
+        
         if os.path.join(SKIN, 'extras', 'skins', 'Default', '720p', xml_file):
             XML = xml_file
             
@@ -1395,6 +1393,8 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
     @buggalo.buggalo_try_except({'method' : 'StreamSetupDialog.onInit'})
     def onInit(self):
         self.getControl(self.C_STREAM_VISIBILITY_MARKER).setLabel(self.VISIBLE_STRM)
+        if not os.path.exists(mashfile):
+            self.getControl(self.C_STREAM_MASHUP_TAB).setVisible(False)
 
         favourites = self.streamingService.loadFavourites()
         items = list()
@@ -1516,12 +1516,13 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
                 stream = self.strmFile
 
             if stream is not None:
+                # Rich to delete these - various tests.
                 # path = os.path.join(ADDON.getAddonInfo('path'), 'preview.py')
                 # prev = xbmc.executebuiltin('XBMC.RunScript(%s,%s,%s)' % (path, stream, windowed))
                 # self.player.play(prev)
                 # xbmc.executebuiltin('XBMC.RunPlugin(%s)' % url)
-                self.player.play(item = stream, windowed = True)
                 # self.player.play = xbmc.executebuiltin('XBMC.RunPlugin(%s)' % stream)
+                self.player.play(item = stream, windowed = True)
                 if self.player.isPlaying():
                     self.getControl(self.C_STREAM_MASHUP_PREVIEW).setLabel(strings(STOP_PREVIEW))
                     self.getControl(self.C_STREAM_ADDONS_PREVIEW).setLabel(strings(STOP_PREVIEW))
@@ -1538,7 +1539,6 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
             self.getControl(self.C_STREAM_VISIBILITY_MARKER).setLabel(self.VISIBLE_ADDONS)
         elif controlId == self.C_STREAM_MASHUP_TAB:
             self.getControl(self.C_STREAM_VISIBILITY_MARKER).setLabel(self.VISIBLE_MASHUP)
-
 
     def updateAddonInfo(self):
         listControl = self.getControl(self.C_STREAM_ADDONS)

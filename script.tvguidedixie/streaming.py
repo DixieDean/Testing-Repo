@@ -26,7 +26,6 @@ import ConfigParser
 import os
 import xbmcaddon
 
-
 class StreamsService(object):
     def __init__(self):
         path = os.path.join(xbmc.translatePath('special://home/addons') , 'script.tvguidedixie', 'resources', 'addons.ini')
@@ -41,13 +40,13 @@ class StreamsService(object):
 
         self.loadMashup()
 
-
     def loadMashup(self):
-        selfAddon = xbmcaddon.Addon(id='plugin.video.movie25')
-        datapath = xbmc.translatePath(selfAddon.getAddonInfo('profile'))
-        Dixie=os.path.join(datapath,'Dixie')
-        mashfile=os.path.join(Dixie,'mashup.ini')
+        Dixie = os.path.join(xbmc.translatePath('special://userdata/addon_data'), 'plugin.video.movie25', 'Dixie')
+        mashfile = os.path.join(Dixie,'mashup.ini')
         if os.path.exists(mashfile):
+            print '************** Mashfile streaming.py ***************'
+            print Dixie
+            print mashfile 
             os.remove(mashfile)
         for path, subdirs, files in os.walk(Dixie):
             for filename in files:

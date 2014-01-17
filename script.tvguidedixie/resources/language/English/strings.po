@@ -241,7 +241,7 @@ msgid "Choose stream"
 msgstr ""
 
 msgctxt "#30305"
-msgid "You can choose your own .strm file to play, when you want to watch this channel."
+msgid "Configure the stream for this channel."
 msgstr ""
 
 msgctxt "#30306"
