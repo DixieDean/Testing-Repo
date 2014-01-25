@@ -33,44 +33,80 @@ import xbmcaddon
 import xbmc
 import os
 import shutil
-addon     = xbmcaddon.Addon()
-addonid   = addon.getAddonInfo('id')
-addonname = addon.getAddonInfo('name')
-author    = addon.getAddonInfo('author')
-version   = addon.getAddonInfo('version')
-addonpath = addon.getAddonInfo('path')
-print '****** TV Guide Dixie Information ******'
-print addonid, addonname, author, version, addonpath
 
-ADDON     = xbmcaddon.Addon(id = 'script.tvguidedixie')
-MASHMODE  = (ADDON.getSetting('mashmode') == 'true')
-SKIN      = ADDON.getSetting('dixie.skin')
-mash_path = os.path.join(xbmc.translatePath('special://home/userdata/addon_data') , 'script.tvguidedixie', 'extras', 'skins', 'Mash Up')
-skin_path = os.path.join(xbmc.translatePath('special://home/userdata/addon_data') , 'script.tvguidedixie', 'extras', 'skins', SKIN)
-mashfile = os.path.join(xbmc.translatePath('special://userdata/addon_data'), 'plugin.video.movie25', 'Dixie', 'mashup.ini')
+# addon        = xbmcaddon.Addon()
+# addonid      = addon.getAddonInfo('id')
+# addonversion = addon.getAddonInfo('version')
+
+ADDON        = xbmcaddon.Addon(id = 'script.tvguidedixie')
+MASHMODE     = (ADDON.getSetting('mashmode') == 'true')
+SKIN         = ADDON.getSetting('dixie.skin')
+SKINSVERSION = '1'
+datapath     = xbmc.translatePath(ADDON.getAddonInfo('profile'))
+extras       = os.path.join(datapath, 'extras')
+skinfolder   = os.path.join(datapath, extras, 'skins')
+mashpath     = os.path.join(skinfolder, 'Mash Up')
+skinpath     = os.path.join(skinfolder, SKIN)
+mashfile     = os.path.join(xbmc.translatePath('special://profile/addon_data/plugin.video.movie25/Dixie/mashup.ini'))
+version      = os.path.join(skinfolder, 'skinsversion.txt')
+
+# print '*********** IS MASHMODE ON? ************'
+# print addonid, addonversion
+print '********* LATEST SKINS VERSION *********'
+print SKINSVERSION
+
+try:
+    if not os.path.exists(mashpath):
+        print '************* MASH MISSING *************'
+        Path = extras
+        import urllib, dxmnew
+        try: os.makedirs(Path)
+        except: pass
+        Url  = 'https://github.com/DixieDean/Dixie-Deans-XBMC-Repo/raw/master/skins-update.zip'
+        LocalName = 'skins.zip'
+        LocalFile = xbmc.translatePath(os.path.join(Path, LocalName))
+        try: urllib.urlretrieve(Url,LocalFile)
+        except:xbmc.executebuiltin("XBMC.Notification(TV Guide Dixie,Skin download failed,3000)")
+        if os.path.isfile(LocalFile):
+            print '********* SKINS ARE INSTALLING *********'
+            extractFolder = Path
+            pluginsrc = xbmc.translatePath(os.path.join(extractFolder))
+            dxmnew.unzipAndMove(LocalFile,extractFolder,pluginsrc)
+            try: os.remove(LocalFile)
+            except: pass
+except: pass
+
+try:
+    #load skin version from file
+    with open (version, 'r') as f:
+        local = f.readline()
+        print '******** EXISTING SKINS VERSION ********'
+        print local
+        if not local == SKINSVERSION:
+            Path = extras
+            import urllib, dxmnew
+            try: os.makedirs(Path)
+            except: pass
+            Url  = 'https://github.com/DixieDean/Dixie-Deans-XBMC-Repo/raw/master/skins-update.zip'
+            LocalName = 'skins.zip'
+            LocalFile = xbmc.translatePath(os.path.join(Path, LocalName))
+            try: urllib.urlretrieve(Url,LocalFile)
+            except:xbmc.executebuiltin("XBMC.Notification(TV Guide Dixie,Skin download failed,3000)")
+            if os.path.isfile(LocalFile):
+                print '********** SKINS ARE UPDATING **********'
+                extractFolder = Path
+                pluginsrc = xbmc.translatePath(os.path.join(extractFolder))
+                dxmnew.unzipAndMove(LocalFile,extractFolder,pluginsrc)
+                try: os.remove(LocalFile)
+                except: pass
+        f.closed
+except: pass
+
 
 if MASHMODE:
-    PATH  = mash_path
+    PATH  = mashpath
 else:
-    PATH  = skin_path
-
-if not os.path.exists(skin_path):
-    import urllib,dxmnew
-    datapath = xbmc.translatePath(ADDON.getAddonInfo('profile'))
-    Path=os.path.join(datapath,'extras')
-    try: os.makedirs(Path)
-    except: pass
-    Url = 'https://github.com/DixieDean/Dixie-Deans-XBMC-Repo/raw/master/skins.zip'
-    LocalName = 'skin.zip'
-    LocalFile = xbmc.translatePath(os.path.join(Path, LocalName))
-    try: urllib.urlretrieve(Url,LocalFile)
-    except:xbmc.executebuiltin("XBMC.Notification(TV Guide Dixie,Skin download failed,3000)")
-    if os.path.isfile(LocalFile):
-        extractFolder = Path
-        pluginsrc =  xbmc.translatePath(os.path.join(extractFolder))
-        dxmnew.unzipAndMove(LocalFile,extractFolder,pluginsrc)
-    try:os.remove(LocalFile)
-    except:pass
+    PATH  = skinpath
 
 
 ADDON.setSetting('mashmode', 'false')
@@ -80,10 +116,8 @@ xml_file = os.path.join('script-tvguide-main.xml')
 if os.path.join(SKIN, 'extras', 'skins', 'Default', '720p', xml_file):
     XML  = xml_file
 
-print '====== Skin is ======'
+print '*************** SKIN IS ****************'
 print SKIN
-print '======= Skin path is ======'
-print PATH
 
 DEBUG = False
 
@@ -112,7 +146,7 @@ KEY_NAV_BACK = 92
 KEY_CONTEXT_MENU = 117
 KEY_HOME = 159
 
-CHANNELS_PER_PAGE = 9
+CHANNELS_PER_PAGE = 8
 
 HALF_HOUR = datetime.timedelta(minutes = 30)
 
@@ -1378,7 +1412,6 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
         super(StreamSetupDialog, self).__init__()
         self.database = database
         self.channel = channel
-
         self.player = xbmc.Player()
         self.previousAddonId = None
         self.previousProvider = None
@@ -1392,6 +1425,8 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
 
     @buggalo.buggalo_try_except({'method' : 'StreamSetupDialog.onInit'})
     def onInit(self):
+        # self.getControl(self.C_STREAM_ADDONS_PREVIEW).setVisible(False)
+        self.getControl(self.C_STREAM_MASHUP_PREVIEW).setVisible(False)
         self.getControl(self.C_STREAM_VISIBILITY_MARKER).setLabel(self.VISIBLE_STRM)
         if not os.path.exists(mashfile):
             self.getControl(self.C_STREAM_MASHUP_TAB).setVisible(False)
@@ -1516,13 +1551,9 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
                 stream = self.strmFile
 
             if stream is not None:
-                # Rich to delete these - various tests.
-                # path = os.path.join(ADDON.getAddonInfo('path'), 'preview.py')
-                # prev = xbmc.executebuiltin('XBMC.RunScript(%s,%s,%s)' % (path, stream, windowed))
-                # self.player.play(prev)
-                # xbmc.executebuiltin('XBMC.RunPlugin(%s)' % url)
-                # self.player.play = xbmc.executebuiltin('XBMC.RunPlugin(%s)' % stream)
                 self.player.play(item = stream, windowed = True)
+                # path = os.path.join(ADDON.getAddonInfo('path'), 'player.py')
+                # xbmc.executebuiltin('XBMC.RunScript(%s,%s,%d)' % (path, stream, 1))
                 if self.player.isPlaying():
                     self.getControl(self.C_STREAM_MASHUP_PREVIEW).setLabel(strings(STOP_PREVIEW))
                     self.getControl(self.C_STREAM_ADDONS_PREVIEW).setLabel(strings(STOP_PREVIEW))
@@ -1545,7 +1576,7 @@ class StreamSetupDialog(xbmcgui.WindowXMLDialog):
         item = listControl.getSelectedItem()
         if item is None:
             return
-
+        
         if item.getProperty('addon_id') == self.previousAddonId:
             return
 
@@ -1595,7 +1626,7 @@ class ChooseStreamAddonDialog(xbmcgui.WindowXMLDialog):
 
     def __new__(cls, addons):
         xml_file = os.path.join('script-tvguide-streamaddon.xml')
-        if os.path.join(SKIN, 'resources', 'skins', 'Default', '720p', xml_file):
+        if os.path.join(SKIN, skinfolder, 'Default', '720p', xml_file):
             XML = xml_file
             
         return super(ChooseStreamAddonDialog, cls).__new__(cls, XML, PATH)

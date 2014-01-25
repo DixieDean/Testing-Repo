@@ -328,7 +328,11 @@ msgctxt "#30608"
 msgid "Mash Up"
 msgstr ""
 
-#empty strings from id 30609 to 30609
+msgctxt "#30609"
+msgid "XBMC Playlist"
+msgstr ""
+
+#empty strings from id 30610 to 30609
 
 msgctxt "#30610"
 msgid "Browse..."
@@ -348,7 +352,12 @@ msgctxt "#30621"
 msgid "Choose a Mash Up channel below."
 msgstr ""
 
-#empty strings from id 30622 to 30699
+msgctxt "#30622"
+msgid "Choose from the XBMC Playlist below."
+msgstr ""
+
+
+#empty strings from id 30623 to 30699
 
 msgctxt "#30700"
 msgid "Multiple addons provide this channels.[CR]Choose one to watch the stream."

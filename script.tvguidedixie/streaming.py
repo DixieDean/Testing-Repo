@@ -26,9 +26,12 @@ import ConfigParser
 import os
 import xbmcaddon
 
+ADDON = xbmcaddon.Addon(id = 'script.tvguidedixie')
+datapath = xbmc.translatePath(ADDON.getAddonInfo('profile'))
+
 class StreamsService(object):
     def __init__(self):
-        path = os.path.join(xbmc.translatePath('special://home/addons') , 'script.tvguidedixie', 'resources', 'addons.ini')
+        path = os.path.join(datapath, 'addons.ini')
         url = 'https://raw2.github.com/DixieDean/Dixie-Deans-XBMC-Repo/master/tvgdatafiles/addons.ini'
         urllib.urlretrieve(url, path)
         self.addonsParser = ConfigParser.ConfigParser(dict_type=OrderedDict)
@@ -41,12 +44,9 @@ class StreamsService(object):
         self.loadMashup()
 
     def loadMashup(self):
-        Dixie = os.path.join(xbmc.translatePath('special://userdata/addon_data'), 'plugin.video.movie25', 'Dixie')
+        Dixie = os.path.join(xbmc.translatePath('special://profile/addon_data/plugin.video.movie25/Dixie'))
         mashfile = os.path.join(Dixie,'mashup.ini')
         if os.path.exists(mashfile):
-            print '************** Mashfile streaming.py ***************'
-            print Dixie
-            print mashfile 
             os.remove(mashfile)
         for path, subdirs, files in os.walk(Dixie):
             for filename in files:
@@ -63,7 +63,7 @@ class StreamsService(object):
 
     def loadFavourites(self):
         entries = list()
-        path = xbmc.translatePath('special://userdata/favourites.xml')
+        path = xbmc.translatePath('special://profile/favourites.xml')
         if os.path.exists(path):
             f = open(path)
             xml = f.read()
@@ -83,6 +83,15 @@ class StreamsService(object):
                     entries.append((node.get('name'), value))
             except ExpatError:
                 pass
+
+
+    # def xbmc.PlayList.load(self, filename)
+    #     entries = list()
+    #     filename = os.path.join(datapath, extras, 'playlist.m3u')
+    #     if os.path.exists(filename):
+    #         f = open(filename)
+    #         m3u = f.read()
+    #         f.close()
 
         return entries
 
@@ -129,8 +138,17 @@ class StreamsService(object):
             for (label, stream) in self.getAddonStreams(id):
                 if label == channel.title:
                     matches.append((id, label, stream))
-                    
 
+        # for provider in self.getMashup():
+        #     try:
+        #         self.getMashupIcon(provider)
+        #     except:
+        #         continue
+        # 
+        #     for (label, stream) in self.getMashupIcon(provider):
+        #         if label == channel.title:
+        #             matches.append((provider, label, stream))
+        
         if len(matches) == 1:
             return matches[0][2]
         else:
